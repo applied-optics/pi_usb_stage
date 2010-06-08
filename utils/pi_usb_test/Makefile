@@ -1,0 +1,20 @@
+CFLAGS = -g
+
+all:	pi_usb_test
+.PHONY:	all clean install
+
+pi_usb_test: pi_usb_test.o pi_usb_user.o
+	g++ $(CFLAGS) -o pi_usb_test pi_usb_test.o pi_usb_user.o
+
+pi_usb_test.o: pi_usb_test.cc ../../library/pi_usb_user.cc
+	g++ $(CFLAGS) -c pi_usb_test.cc -o pi_usb_test.o
+
+pi_usb_user.o:	../../library/pi_usb_user.cc ../../library/pi_usb_user.h
+	g++ $(CFLAGS) -c ../../library/pi_usb_user.cc -o pi_usb_user.o
+
+clean:
+	rm -f *.o test.* pi_usb_test
+
+install:
+	cp -f pi_usb_test /usr/local/bin
+
