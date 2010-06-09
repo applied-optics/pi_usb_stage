@@ -12,8 +12,8 @@ char	buf[1024];
 		}
 
 
-//	ret = pi_usb_send(fd, "FE");
-	ret = pi_usb_send(fd, "MR440000");
+	ret = pi_usb_send(fd, "FE2");
+//	ret = pi_usb_send(fd, "MR440000");
 //	do {
 //		ret = pi_usb_motion_complete();
 //		usleep(100000);
@@ -23,7 +23,7 @@ char	buf[1024];
 //		printf("%hhu ", buf[l]);
 //		}
 
-	pi_usb_wait_motion_complete(fd);
+//	pi_usb_wait_motion_complete(fd);
 	printf("Motion complete\n");
 	pi_usb_close(fd);
 	printf("\nDone.\n");

@@ -1,2 +1,5 @@
 docs
 pi_usb_test
+utils/pi_usb_test/pi_usb_query
+utils/pi_usb_test/pi_usb_register
+utils/pi_usb_test/pi_usb_send

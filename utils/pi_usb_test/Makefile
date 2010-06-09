@@ -1,7 +1,16 @@
 CFLAGS = -g
 
-all:	pi_usb_test
+all:	pi_usb_test pi_usb_send pi_usb_query pi_usb_register
 .PHONY:	all clean install
+
+pi_usb_register: pi_usb_register.o pi_usb_user.o serial_user.o
+	g++ $(CFLAGS) -o pi_usb_register pi_usb_register.o pi_usb_user.o serial_user.o
+
+pi_usb_query: pi_usb_query.o pi_usb_user.o serial_user.o
+	g++ $(CFLAGS) -o pi_usb_query pi_usb_query.o pi_usb_user.o serial_user.o
+
+pi_usb_send: pi_usb_send.o pi_usb_user.o serial_user.o
+	g++ $(CFLAGS) -o pi_usb_send pi_usb_send.o pi_usb_user.o serial_user.o
 
 pi_usb_test: pi_usb_test.o pi_usb_user.o serial_user.o
 	g++ $(CFLAGS) -o pi_usb_test pi_usb_test.o pi_usb_user.o serial_user.o
