@@ -3,3 +3,6 @@ pi_usb_test
 utils/pi_usb_test/pi_usb_query
 utils/pi_usb_test/pi_usb_register
 utils/pi_usb_test/pi_usb_send
+utils/cmd_line_utils/pi_usb_query
+utils/cmd_line_utils/pi_usb_register
+utils/cmd_line_utils/pi_usb_send

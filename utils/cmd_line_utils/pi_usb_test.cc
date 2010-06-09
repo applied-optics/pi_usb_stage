@@ -6,14 +6,14 @@ int	fd, ret, l;
 char	buf[1024];
 	memset(&buf, 0, 1024);
 	//open serial port
-	if((fd = pi_usb_open("ttyUSB0")) < 0) {
+	if((fd = pi_usb_open("pi_usb0")) < 0) {
 		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", fd);
 		return fd;
 		}
 
 
-	ret = pi_usb_send(fd, "FE2");
-//	ret = pi_usb_send(fd, "MR440000");
+//	ret = pi_usb_send(fd, "FE2");
+	ret = pi_usb_send(fd, "MR110000");
 //	do {
 //		ret = pi_usb_motion_complete();
 //		usleep(100000);

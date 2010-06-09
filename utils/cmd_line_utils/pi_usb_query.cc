@@ -1,9 +1,9 @@
-/* pi_usb_user.h
+/* pi_usb_query.cc
  * Copyright (C) 2010 Steve D. Sharples
  *
- * A simple user library that allows you to do useful things to
+ * A simple commandline utility that allows you to send queries to
  * a PI (Physik Instrumente) USB motor controller, such as the C-863
- * Mercury device. Uses our serial_user libraries.
+ * Mercury device. Uses our pi_usb_user and serial_user libraries.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,33 +22,28 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#ifndef __PI_USB_USER__
-#define __PI_USB_USER__
+#include "../../library/pi_usb_user.h"
 
-#include "../../serial/serial_user.h"
+int	main(int argc, char *argv[]) {
+int	fd; // file descriptor of the usb device
+char	buf[1024];
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <time.h>
+	memset(&buf, 0, 1024); // clear the buffer
 
-#define	PI_USB_DEFAULT_USLEEP	100000
-#define PI_USB_BUF		128
+	if(argc < 2) {
+		printf("Usage: %s query [device]\n", argv[0]);
+		printf("If device is not specified, then pi_usb0 is used.\n");
+		exit(1);
+		}
 
-int	pi_usb_open(const char *tty);
-int	pi_usb_close(int fd);
-int	pi_usb_send(int fd, const char *cmd);
-int	pi_usb_send_raw(int fd, const char *cmd, int len);
-int	pi_usb_receive(int fd, char *buf, int len);
-int	pi_usb_send_and_receive(int fd, const char *cmd, char *buf, int buf_len);
-int	pi_usb_motion_complete(int fd);
-void	pi_usb_wait_motion_complete(int fd);
-void	pi_usb_wait_motion_complete(int fd, useconds_t usleep_time);
+	if(argc < 3)	fd = pi_usb_open("pi_usb0");
+	else		fd = pi_usb_open(argv[2]);
+	if(fd < 0) {
+		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", fd);
+		return fd;
+		}
+	pi_usb_send_and_receive(fd, argv[1], buf, 1024);
+	printf("%s\n", buf);
+	pi_usb_close(fd);
+	}
 
-
-#endif
