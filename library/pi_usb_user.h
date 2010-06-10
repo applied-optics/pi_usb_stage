@@ -36,19 +36,48 @@
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #define	PI_USB_DEFAULT_USLEEP	100000
 #define PI_USB_BUF		128
+#define PI_USB_MAX_CONTROLLERS	16
+
+#define	PI_USB_NO_WAIT		0 // as in "do not wait for motion to stop" (move functions)
+#define	PI_USB_WAIT		1
+
+#define	PI_USB_DEFAULT_CPU	(float)440000/360	// "counts per degree" (should go in stage database, #define for now, change later
 
 int	pi_usb_open(const char *tty);
-int	pi_usb_close(int fd);
-int	pi_usb_send(int fd, const char *cmd);
-int	pi_usb_send_raw(int fd, const char *cmd, int len);
-int	pi_usb_receive(int fd, char *buf, int len);
-int	pi_usb_send_and_receive(int fd, const char *cmd, char *buf, int buf_len);
-int	pi_usb_motion_complete(int fd);
-void	pi_usb_wait_motion_complete(int fd);
-void	pi_usb_wait_motion_complete(int fd, useconds_t usleep_time);
-
+int	pi_usb_open(const char *tty, int axis);
+void	pi_usb_init(int axis);
+int	pi_usb_close(int axis);
+int	pi_usb_send(int axis, const char *cmd);
+int	pi_usb_send_raw(int axis, const char *cmd, int len);
+int	pi_usb_receive(int axis, char *buf, int len);
+int	pi_usb_send_and_receive(int axis, const char *cmd, char *buf, int buf_len);
+int	pi_usb_obtain_integer_after_colon(int axis, const char *cmd);
+int	pi_usb_send_cmd(int axis, const char *cmd, int number);
+int	pi_usb_is_rotation_stage(int axis);
+void	pi_usb_set_cpu(int axis, float cpu);
+int	pi_usb_real_to_count(int axis, float pos_real);
+float	pi_usb_count_to_real(int axis, int pos);
+void	pi_usb_motor_on(int axis);
+void	pi_usb_motor_off(int axis);
+int	pi_usb_motion_complete(int axis);
+void	pi_usb_wait_motion_complete(int axis);
+void	pi_usb_wait_motion_complete(int axis, useconds_t usleep_time);
+int	pi_usb_get_pos(int axis);
+float	pi_usb_get_pos_real(int axis);
+void	pi_usb_set_pos(int axis, int pos);
+void	pi_usb_set_pos_real(int axis, float pos_real);
+void	pi_usb_set_origin(int axis);
+void	pi_usb_move_relative(int axis, int pos, int wait);
+void	pi_usb_move_relative_real(int axis, float pos_real, int wait);
+void	pi_usb_move_absolute(int axis, int pos, int wait);
+void	pi_usb_move_absolute_real(int axis, float pos_real, int wait);
+int	pi_usb_get_vel(int axis);
+float	pi_usb_get_vel_real(int axis);
+void	pi_usb_set_vel(int axis, int vel);
+void	pi_usb_set_vel_real(int axis, float vel_real);
 
 #endif
