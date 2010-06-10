@@ -28,5 +28,6 @@ clean:
 	rm -f *.o test.* pi_usb_test
 
 install:
-	cp -f pi_usb_test /usr/local/bin
+	cp -f pi_usb_send pi_usb_query pi_usb_register install_pi_usb remove_pi_usb /usr/local/bin
+	[ -f /etc/udev/rules.d ] || cp 98-pi-usb.rules /etc/udev/rules.d/98-pi-usb.rules
 

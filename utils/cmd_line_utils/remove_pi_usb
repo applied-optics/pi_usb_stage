@@ -1,0 +1,26 @@
+#!/bin/sh
+
+#This script should be run by udev by sticking the appropriate line in /etc/udev/rules.d/udev_local.rules
+#The line will look something like:
+#
+#ACTION=="remove", ENV{PRODUCT}=="1a72/1007/200", RUN+="/usr/local/bin/remove_pi_usb"
+#How did I find out about "1a72/1007/200" ? By running "udevadm monitor --environment" and 
+#seeing what came up when I unplugged the device. 1a72 is vendor id, 1007 is product id, hope the 200 doesn't change...
+#
+#The script goes through all files /dev/pi_usb[0..15], looking to see if they are a broken link or not.
+#If they are, then they are removed.
+
+COUNT=0
+while [ $COUNT -le 15 ]; do
+	file=/dev/pi_usb$COUNT
+	if [ -L $file ]; then
+		# "$file is a link"
+		if [ -e $file ]; then
+			echo "and works" > /dev/null
+		else
+			# "and is broken so should be deleted"
+			rm $file
+		fi
+	fi
+	let COUNT=COUNT+1
+done

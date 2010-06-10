@@ -498,7 +498,7 @@ int	msi[PI_USB_MAX_CONTROLLERS]; // move size index
 
 		for(axis=0; axis<n; axis++) {
 			if((is_rot[axis] == 1) && (msi[axis] < 3))	cout<<"a"<<axis<<": "<<pi_usb_get_pos_real(axis)<<" ";
-			else						cout<<"a"<<axis<<": "<<(int) pi_usb_get_pos_real(axis)<<" ";
+			else						cout<<"a"<<axis<<": "<<roundf(pi_usb_get_pos_real(axis))<<" ";
 			}
 		cout<<"\r\n"<<flush;
 

@@ -1,0 +1,6 @@
+# Give write permission to everyone for PI Mercury controller, and load FTDI SIO module
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="1a72", SYSFS{idProduct}=="1007", MODE="666", RUN+="/usr/local/bin/install_pi_usb"
+# Direct version without running script:
+#ACTION=="add", BUS=="usb", SYSFS{idVendor}=="1a72", SYSFS{idProduct}=="1007", MODE="666", RUN+="/sbin/modprobe ftdi_sio vendor=0x1a72 product=0x1007"
+ACTION=="remove", ENV{PRODUCT}=="1a72/1007/200", RUN+="/usr/local/bin/remove_pi_usb"
+
