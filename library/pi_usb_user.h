@@ -37,6 +37,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <ctype.h>
 
 #define	PI_USB_DEFAULT_USLEEP	100000
 #define PI_USB_BUF		128
@@ -48,6 +49,7 @@
 #define	PI_USB_DEFAULT_CPU	(float)440000/360	// "counts per degree" (should go in stage database, #define for now, change later
 
 int	pi_usb_open(const char *tty);
+int	pi_usb_open(int axis);
 int	pi_usb_open(const char *tty, int axis);
 void	pi_usb_init(int axis);
 int	pi_usb_close(int axis);

@@ -35,7 +35,7 @@
 #include "../../library/pi_usb_user.h"
 
 int	main(int argc, char *argv[]) {
-int	fd, ret;
+int	axis, ret;
 int	l = 0;
 int	chan = -1;
 char	out_bytes[2];
@@ -47,9 +47,9 @@ char	buf[128];
 		exit(1);
 		}
 
-	if((fd = pi_usb_open(argv[1])) < 0) {
-		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", fd);
-		return fd;
+	if((axis = pi_usb_open(argv[1]), 0) < 0) {
+		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", axis);
+		return axis;
 		}
 
 	out_bytes[0] = (char) 1; // First of the two bytes needs to be 1. (Not ascii(1), but actually 1).
@@ -57,12 +57,12 @@ char	buf[128];
 	do{
 		sprintf(chan_str, "%hhX", l); // Converts l (0..15) into hex (0..F)
 		out_bytes[1] = chan_str[0]; // Just extract the char, make it the second byte
-		pi_usb_send_raw(fd, out_bytes, 2); // Send these two bytes, without any trailing \r
-		ret = pi_usb_send_and_receive(fd, "VE", buf, 128); // Ask the controller what version it is
+		pi_usb_send_raw(axis, out_bytes, 2); // Send these two bytes, without any trailing \r
+		ret = pi_usb_send_and_receive(axis, "VE", buf, 128); // Ask the controller what version it is
 		if(ret == SERIAL_OK) chan = l; // We don't care about the reponse, just the function return value
 		l++;
 		} while(l <= 15 && chan < 0);
 	printf("%d\n", chan); // Output the number (in decimal) to stdout
-	pi_usb_close(fd);
+	pi_usb_close(axis);
 	}
 

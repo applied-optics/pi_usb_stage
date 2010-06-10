@@ -40,17 +40,41 @@ int	PI_USB_FD[PI_USB_MAX_CONTROLLERS]; // file descriptors, indexed by axis/addr
  * terms of file descriptors. This indexing by axis allows you to have other
  * global arrays, most notably PI_USB_CPU, which sets the "counts per unit"
  * (where unit is either microns or degrees, depending on the stage type).  */
+
+/* Open by device name. Axis derived from device name (upto last 2 digits),
+ * 0 if it cannot be found or if > 15 */
 int	pi_usb_open(const char *tty) {
-int	axis;
-char	preamble[SERIAL_MAX_DEV_LEN];
-	// Finds out the integer at the end of the device name.
-	sscanf(tty, "%[^'_']_usb%d", &preamble, &axis);
+int	sl, axis = 0;
+	sl = strlen(tty);
+	if(isdigit(tty[sl - 2]))	axis = (int) strtol(tty + sl - 2, (char **) NULL, 10);
+	else if(isdigit(tty[sl - 1]))	axis = (int) strtol(tty + sl - 1, (char **) NULL, 10);
 	return pi_usb_open(tty, axis);
 	}
 
+/* Open by axis number. Device name /dev/pi_usbX is derived from this */
+int	pi_usb_open(int axis) {
+char	tty[SERIAL_MAX_DEV_LEN];
+	snprintf(tty, SERIAL_MAX_DEV_LEN, "/dev/pi_usb%d", axis);
+	return pi_usb_open(tty, axis);
+	}
+
+/* The above two wrapper functions ultimately use this, both the axis AND
+ * the device name are specified. */
 int	pi_usb_open(const char *tty, int axis) {
+char	address_selection_code[2];
+	if((axis > (PI_USB_MAX_CONTROLLERS - 1)) || (axis < 0))	axis = 0; // don't put up with any nonsense
 	PI_USB_FD[axis] = serial_open(tty, 9600); // default baud rate
-	return axis;
+	// serial_open should return a file descriptor. If negative, something
+	// is wrong, so return the error value
+	if(PI_USB_FD[axis] < 0) return PI_USB_FD[axis];
+	// otherwise, return the axis, rather than the file descriptor.
+	// Before that, send it the address selection code again.
+	else {
+		address_selection_code[0] = (char) 1;
+		address_selection_code[1] = axis + '0';
+		pi_usb_send_raw(axis, address_selection_code, 2);
+		return axis;
+		}
 	}
 
 /****************************************************************************

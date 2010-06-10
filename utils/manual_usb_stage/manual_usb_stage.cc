@@ -21,7 +21,8 @@ int	restore_position;
 				return ret;
 				}
 			pi_usb_init(axis);
-			initial_pos[axis] = pi_usb_get_pos_real(axis);
+			// round the position on purpose, so we don't get cumulative errors.
+			initial_pos[axis] = roundf(pi_usb_get_pos_real(axis));
 			n++;
 			}
                 }

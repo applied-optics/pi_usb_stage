@@ -1,19 +1,32 @@
 #include "../../library/pi_usb_user.h"
+#include <ctype.h>
 
 int	main(int argc, char *argv[]) {
 
-int	fd, ret, l;
+int	fd, ret=0, l;
 float	pos_deg;
 float	retf;
 char	buf[1024];
 char	tmp[128];
 char	preamble[128];
-
+int	sl;
+char	c;
 	memset(&buf, 0, 1024);
 
-	sprintf(tmp,"/dev/pi_usb15");
-	sscanf(tmp, "%[^'_']_usb%d", &preamble, &ret);
-	printf("The number is: %d, preamble is: %s\n", ret, preamble);
+	sprintf(tmp,"/dev/pi_usb0");
+	sl=strlen(tmp);
+	if(isdigit(tmp[sl-2])) {
+		printf("double-digit\n");
+		ret = (int) strtol(tmp+sl-2, (char **) NULL, 10);
+		}
+	else if(isdigit(tmp[sl-1])) {
+		printf("single-digit\n");
+		ret = (int) strtol(tmp+sl-1, (char **) NULL, 10);
+		}
+//	sscanf(tmp, "%[^'_']_usb%d", &preamble, &ret);
+	printf("strlen=%d, The number is: %d\n", sl,ret);
+
+	printf("this number as a char: %c\n", ret+'0');
 
 	//open serial port
 //	if((fd = pi_usb_open("pi_usb0")) < 0) {

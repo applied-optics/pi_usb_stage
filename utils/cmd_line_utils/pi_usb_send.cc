@@ -25,7 +25,7 @@
 #include "../../library/pi_usb_user.h"
 
 int	main(int argc, char *argv[]) {
-int	fd; // file descriptor of the usb device
+int	axis;
 
 	if(argc < 2) {
 		printf("Usage: %s command [device]\n", argv[0]);
@@ -33,13 +33,13 @@ int	fd; // file descriptor of the usb device
 		exit(1);
 		}
 
-	if(argc < 3)	fd = pi_usb_open("pi_usb0");
-	else		fd = pi_usb_open(argv[2]);
-	if(fd < 0) {
-		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", fd);
-		return fd;
+	if(argc < 3)	axis = pi_usb_open("pi_usb0");
+	else		axis = pi_usb_open(argv[2]);
+	if(axis < 0) {
+		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", axis);
+		return axis;
 		}
-	pi_usb_send(fd, argv[1]);
-	pi_usb_close(fd);
+	pi_usb_send(axis, argv[1]);
+	pi_usb_close(axis);
 	}
 
