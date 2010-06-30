@@ -20,7 +20,7 @@ int	restore_position;
 				fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", ret);
 				return ret;
 				}
-			pi_usb_init(axis);
+			pi_usb_init(axis,FALSE);
 			// round the position on purpose, so we don't get cumulative errors.
 			initial_pos[axis] = roundf(pi_usb_get_pos_real(axis));
 			n++;
@@ -46,10 +46,12 @@ char	keypress;
 int	kp;
 char	inptvalue[12];
 int	is_rot[PI_USB_MAX_CONTROLLERS];
+float	last_pos[PI_USB_MAX_CONTROLLERS];
 float	move_size[PI_USB_MAX_CONTROLLERS];
 float	rot_move_size[7] = {0.1, 0.5, 1.0, 5.0, 10.0, 45.0, 90.0};
 float	lin_move_size[5] = {1.0, 10.0, 100.0, 1000.0, 10000.0};
 int	msi[PI_USB_MAX_CONTROLLERS]; // move size index
+int	limit_status;
 
 	// ncurses stuff
 	initscr(); cbreak();
@@ -68,6 +70,7 @@ int	msi[PI_USB_MAX_CONTROLLERS]; // move size index
 	if(n > 3) cout<<"Use keypad up-down arrow keys with NumLock ON to move axis 3"<<"\r\n"<<flush;
 
 	for(axis=0; axis<n; axis++) {
+		last_pos[axis] = initial_pos[axis];
 		if(pi_usb_is_rotation_stage(axis) == 1) {
 			is_rot[axis] = 1;
 			msi[axis] = 4;
@@ -498,8 +501,17 @@ int	msi[PI_USB_MAX_CONTROLLERS]; // move size index
 //			}
 
 		for(axis=0; axis<n; axis++) {
-			if((is_rot[axis] == 1) && (msi[axis] < 3))	cout<<"a"<<axis<<": "<<pi_usb_get_pos_real(axis)<<" ";
-			else						cout<<"a"<<axis<<": "<<roundf(pi_usb_get_pos_real(axis))<<" ";
+			limit_status = pi_usb_get_limit_status(axis);
+			if((limit_status ==  PI_USB_ON_POSITIVE_LIMIT) || (limit_status ==  PI_USB_ON_NEGATIVE_LIMIT)) {
+				cout<<"LIMIT SWITCH reached on axis "<<axis<<" at "<<pi_usb_get_pos_real(axis)<<", moving back to "<<last_pos[axis]<<"\r\n"<<flush;
+				pi_usb_move_absolute_real(axis, last_pos[axis], PI_USB_WAIT);
+				}
+			}
+
+		for(axis=0; axis<n; axis++) {
+			if((is_rot[axis] == 1) && (msi[axis] < 3))	last_pos[axis] = pi_usb_get_pos_real(axis);
+			else						last_pos[axis] = roundf(pi_usb_get_pos_real(axis));
+			cout<<"a"<<axis<<": "<<last_pos[axis]<<" ";
 			}
 		cout<<"\r\n"<<flush;
 

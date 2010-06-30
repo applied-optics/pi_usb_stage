@@ -11,29 +11,32 @@ char	tmp[128];
 char	preamble[128];
 int	sl;
 char	c;
+char	hex_str[2];
+int	axis;
 	memset(&buf, 0, 1024);
+	memset(&tmp, 0, 128);
 
-	sprintf(tmp,"/dev/pi_usb0");
-	sl=strlen(tmp);
-	if(isdigit(tmp[sl-2])) {
-		printf("double-digit\n");
-		ret = (int) strtol(tmp+sl-2, (char **) NULL, 10);
-		}
-	else if(isdigit(tmp[sl-1])) {
-		printf("single-digit\n");
-		ret = (int) strtol(tmp+sl-1, (char **) NULL, 10);
-		}
-//	sscanf(tmp, "%[^'_']_usb%d", &preamble, &ret);
-	printf("strlen=%d, The number is: %d\n", sl,ret);
-
-	printf("this number as a char: %c\n", ret+'0');
-
+	ret=pi_usb_recall_installed_stage(0, tmp, FALSE);
+	printf("ret = %d, tmp = %s\n", ret, tmp);
+	
 	//open serial port
-//	if((fd = pi_usb_open("pi_usb0")) < 0) {
-//		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", fd);
-//		return fd;
-//		}
-//	pi_usb_init(fd);
+	if((axis = pi_usb_open("pi_usb0")) < 0) {
+		fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", axis);
+		return axis;
+		}
+	printf("managed pi_usb_open\n");
+	pi_usb_init(axis, FALSE);
+	printf("managed pi_usb_init\n");
+
+	pi_usb_auto_stage(axis, tmp);
+
+	ret = pi_usb_get_limit_status(axis);
+	printf("ret = %d\n",ret);
+	
+
+//	printf("Moving relative 1mm\n"); pi_usb_move_relative_real(axis, 1000, 1);
+
+
 
 //	printf("Setting position to 0 degrees\n"); pi_usb_set_pos_deg(fd, 0);
 //	pos_deg = pi_usb_get_pos_deg(fd); ret = pi_usb_get_pos(fd); printf("Position: %f degrees, %d counts\n", pos_deg, ret);
@@ -52,6 +55,6 @@ char	c;
 //		pos_deg = pi_usb_get_pos_deg(fd); ret = pi_usb_get_pos(fd); printf("Position: %f degrees, %d counts\n", pos_deg, ret);
 //		}
 
-//	pi_usb_close(fd);
+	pi_usb_close(axis);
 	}
 

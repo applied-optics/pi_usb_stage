@@ -1,0 +1,13 @@
+
+stage m-605.2dd
+	p-term 		120
+	i-term 		20
+	d-term 		200
+	i-limit		2000
+	acceleration	1200000
+	velocity	50000
+	limit_mode	2
+	cpu		10
+	rotation_stage	0
+	end
+

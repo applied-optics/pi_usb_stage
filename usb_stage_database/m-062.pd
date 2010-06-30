@@ -1,0 +1,13 @@
+
+stage m-061.pd
+	p-term 		300
+	i-term 		20
+	d-term 		300
+	i-limit		2000
+	acceleration	350000
+	velocity	50000
+	limit_mode	2
+	cpu		1222.2222222
+	rotation_stage	1
+	end
+

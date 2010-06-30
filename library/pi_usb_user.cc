@@ -26,6 +26,7 @@
 
 // cpu = "counts per unit", either micrometres (linear) or degrees (rotation)
 float	PI_USB_CPU[PI_USB_MAX_CONTROLLERS];
+int	PI_USB_IS_ROT[PI_USB_MAX_CONTROLLERS]; // = 0 if linear stage, = 1 if rotation stage
 
 int	PI_USB_FD[PI_USB_MAX_CONTROLLERS]; // file descriptors, indexed by axis/address
 
@@ -62,6 +63,8 @@ char	tty[SERIAL_MAX_DEV_LEN];
  * the device name are specified. */
 int	pi_usb_open(const char *tty, int axis) {
 char	address_selection_code[2];
+char	chan_str[2];
+
 	if((axis > (PI_USB_MAX_CONTROLLERS - 1)) || (axis < 0))	axis = 0; // don't put up with any nonsense
 	PI_USB_FD[axis] = serial_open(tty, 9600); // default baud rate
 	// serial_open should return a file descriptor. If negative, something
@@ -70,8 +73,10 @@ char	address_selection_code[2];
 	// otherwise, return the axis, rather than the file descriptor.
 	// Before that, send it the address selection code again.
 	else {
+		sprintf(chan_str, "%hhX", axis); // Converts axis (0..15) into hex (0..F)
 		address_selection_code[0] = (char) 1;
-		address_selection_code[1] = axis + '0';
+		address_selection_code[1] = chan_str[0]; // Just extract the char, make it the second byte
+
 		pi_usb_send_raw(axis, address_selection_code, 2);
 		return axis;
 		}
@@ -81,7 +86,20 @@ char	address_selection_code[2];
  * INIT
  ****************************************************************************/
 void	pi_usb_init(int axis) {
-	pi_usb_set_cpu(axis, PI_USB_DEFAULT_CPU); // should read it from stage database
+	pi_usb_init(axis, TRUE);
+	}
+
+void	pi_usb_init(int axis, BOOL silent) {
+char	stage_type[PI_USB_BUF];
+BOOL	got_installed_stage_type;
+
+	if(pi_usb_recall_installed_stage(axis, stage_type, silent) == TRUE) {
+		pi_usb_auto_stage(axis, stage_type);
+		}
+	else { // best to assume rotation stage, then the speeds will be too low rather than too high
+		pi_usb_set_cpu(axis, PI_USB_DEFAULT_CPU);
+		pi_usb_set_rotation_stage_flag(axis, 1);
+		}
 	pi_usb_motor_on(axis);
 	}
 
@@ -148,9 +166,176 @@ char	cmd_str[PI_USB_BUF];
 	return pi_usb_send(axis, cmd_str);
 	}
 
+
+
+/****************************************************************************
+ * HOUSEKEEPING - STAGE TYPE ETC
+ ****************************************************************************/
+BOOL	pi_usb_recall_installed_stage(int axis, char *stage_type) {
+	return pi_usb_recall_installed_stage(axis, stage_type, FALSE);
+	}
+
+BOOL	pi_usb_recall_installed_stage(int axis, char *stage_type, BOOL silent) {
+char	temp[30];
+int	axis_no;
+int	counter=0;
+BOOL	found_stage_type=FALSE;
+FILE	*fi;
+
+	//check on the existing file---does it exist?
+	if(access(PI_USB_INSTALLED_STAGES_FILE, F_OK)!=0){
+		printf("Recalling USB installed stages: %s doesn't exist (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
+		return FALSE;
+		}
+	//can we read the file?
+	if(access(PI_USB_INSTALLED_STAGES_FILE, R_OK)!=0){
+		printf("Recalling PCI installed stages: %s can't be read (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
+		return FALSE;
+		}
+
+	fi=fopen(PI_USB_INSTALLED_STAGES_FILE,"r");
+
+	//can we open the file?
+	if(fi<0){
+		printf("Recalling PCI installed stages: %s can't be opened (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
+		fclose(fi);
+		return FALSE;
+		}
+
+	do{
+		counter++;
+		fscanf(fi,"%s",temp);
+		TOLOWER(temp);
+		if(strstr(temp,"axis")!=NULL) {
+			fscanf(fi,"%d",&axis_no);
+			if (axis_no == axis) {
+				fscanf(fi,"%s",stage_type);
+				TOLOWER(stage_type);
+				found_stage_type=TRUE;
+				}
+			}
+		}while((counter<PI_USB_OPTIONS_LIMIT) && (strstr(temp,"end")==NULL));
+	fclose(fi);
+	if(found_stage_type==TRUE && silent==FALSE) {
+		printf("From %s: axis %d is a %s\n",PI_USB_INSTALLED_STAGES_FILE, axis, stage_type);
+		}
+	return  found_stage_type;
+	}
+
+int	pi_usb_auto_stage(int axis, const char *name) {
+struct	pi_usb_params stage;
+int	err;
+	stage.p			= PI_USB_NOT_SET;
+	stage.i			= PI_USB_NOT_SET;
+	stage.d			= PI_USB_NOT_SET;
+	stage.vff		= PI_USB_NOT_SET;
+	stage.ilimit		= PI_USB_NOT_SET;
+	stage.acceleration	= PI_USB_NOT_SET;
+	stage.velocity		= PI_USB_NOT_SET;
+	stage.motor_mode	= PI_USB_NOT_SET;
+	stage.limit_mode	= PI_USB_NOT_SET;
+
+	err = pi_usb_auto_read_db(&stage, name, PI_USB_AUTO_STAGE_PATH);
+	if(err != PI_USB_OK) return err;
+
+	pi_usb_auto_set_stage(axis, &stage);
+	return PI_USB_OK;
+	}
+
+int	pi_usb_auto_read_db(struct pi_usb_params *stage, const char *name, const char *path){
+char    filename[PI_USB_PATH_LENGTH], temp[PI_USB_OPTION_LENGTH];
+int     counter = 0;
+FILE    *fi;
+
+	strncpy(filename,path, PI_USB_PATH_LENGTH);
+	strncat(filename,name, PI_USB_PATH_LENGTH);
+
+	// enforce lower case filenames!
+	TOLOWER(filename);
+
+	// look for the file
+	if(access(filename, F_OK) != 0)	return PI_USB_NO_STAGE_FILE;
+	if(access(filename, R_OK) != 0)	return PI_USB_CANT_READ_STAGE_FILE;
+
+	// open file
+	fi = fopen(filename, "r");
+	if(fi < 0)			return PI_USB_CANT_OPEN_STAGE_FILE;
+
+	// now go through file and look for strings
+	do{
+		counter++;
+		fscanf(fi, "%s", temp);
+		TOLOWER(temp);
+		if(strstr(temp, "p-term") != NULL)		fscanf(fi, "%d", &stage->p);
+		if(strstr(temp, "i-term") != NULL)		fscanf(fi, "%d", &stage->i);
+		if(strstr(temp, "d-term") != NULL)		fscanf(fi, "%d", &stage->d);
+		if(strstr(temp, "i-limit") != NULL)		fscanf(fi, "%d", &stage->ilimit);
+		if(strstr(temp, "vff-term") != NULL)		fscanf(fi, "%d", &stage->vff);
+		if(strstr(temp, "acceleration") != NULL)	fscanf(fi, "%d", &stage->acceleration);
+		if(strstr(temp, "velocity") != NULL)		fscanf(fi, "%d", &stage->velocity);
+		if(strstr(temp, "motor_mode") != NULL)		fscanf(fi, "%d", &stage->motor_mode);
+		if(strstr(temp, "limit_mode") != NULL)		fscanf(fi, "%d", &stage->limit_mode);
+		if(strstr(temp, "cpu") != NULL)			fscanf(fi, "%f", &stage->cpu);
+		if(strstr(temp, "rotation_stage") != NULL)	fscanf(fi, "%d", &stage->is_rot);
+		}while((counter < PI_USB_OPTIONS_LIMIT) && (strstr(temp, "end") == NULL));
+
+	fclose(fi);
+	if(counter == PI_USB_OPTIONS_LIMIT)	return PI_USB_AUTO_STAGE_ERROR;
+
+	return PI_USB_OK;
+	}
+
+void	pi_usb_auto_set_stage(int axis, struct pi_usb_params *stage){
+
+	if(stage->p!=PI_USB_NOT_SET)		pi_usb_send_cmd(axis, "DP", stage->p);
+	if(stage->i!=PI_USB_NOT_SET)		pi_usb_send_cmd(axis, "DI", stage->i);
+	if(stage->d!=PI_USB_NOT_SET)		pi_usb_send_cmd(axis, "DD", stage->d);
+	if(stage->ilimit!=PI_USB_NOT_SET)	pi_usb_send_cmd(axis, "DL", stage->ilimit);
+	if(stage->acceleration!=PI_USB_NOT_SET)	pi_usb_send_cmd(axis, "SA", stage->acceleration);
+	if(stage->velocity!=PI_USB_NOT_SET)	pi_usb_set_vel(axis, stage->velocity);
+	if(stage->cpu!=PI_USB_NOT_SET)		pi_usb_set_cpu(axis, stage->cpu);
+	if(stage->is_rot!=PI_USB_NOT_SET)	pi_usb_set_rotation_stage_flag(axis, stage->is_rot);
+
+//	if(stage->vff!=PI_USB_NOT_SET) // I don't know what vff is, for a USB controller...
+//		pi_setQMC(PI_USB_SET_KVFF,		  axis, stage->vff);
+//	if(stage->motor_mode!=PI_USB_NOT_SET) // again, not sure what this is for a USB controller...
+//		pi_setQMC(PI_USB_SET_OUTPUT_MODE,	   axis, stage->motor_mode);
+
+	}
+
+
+
 /****************************************************************************
  * FUNCTIONS SPECIFIC TO CONTROLLER
  ****************************************************************************/
+
+int	pi_usb_get_limit_status(int axis) {
+char	buf[PI_USB_BUF];
+char	block_five_second_character;
+char	hex_str[2];
+int	i, check;
+int	limits_so_far = 0;
+int	ret = PI_USB_LIMIT_OK;
+
+	pi_usb_send_and_receive(axis, "TS", buf, PI_USB_BUF);
+	block_five_second_character = buf[15];
+	hex_str[0] = block_five_second_character;
+	hex_str[1] = '\0';
+	sscanf(hex_str, "%X", &i);
+	check = i & 4;
+	if(check == 4) {
+		limits_so_far++;
+		ret = PI_USB_ON_POSITIVE_LIMIT;
+		}
+	check = i & 8;
+	if(check == 8) {
+		limits_so_far++;
+		ret = PI_USB_ON_NEGATIVE_LIMIT;
+		}
+	if(limits_so_far == 2) return PI_USB_LIMIT_BAD;
+	else return ret;
+	}
+
 
 /* There needs to be a way of the user program to discover if the stage is a
  * rotation stage or a linear stage. This doesn't change the way the driver 
@@ -158,10 +343,17 @@ char	cmd_str[PI_USB_BUF];
  * interact with the user, for instance the "real world unit" for linear
  * stages is the micron, it's not unusual to want to move 10cm (10000um), 
  * however it's unlikely that you're ever going to want to move 10000 degrees.
- * This info should come from the stage database. For now, just return
- * "1". Fix later. */
+ * This info comes from the stage database (or can be set explicitly). */
+void	pi_usb_set_rotation_stage_flag(int axis, int is_rot) {
+	PI_USB_IS_ROT[axis] = is_rot;
+	}
+
 int	pi_usb_is_rotation_stage(int axis) {
-	return 1;
+	return PI_USB_IS_ROT[axis];
+	}
+
+float	pi_usb_get_cpu(int axis) {
+	return PI_USB_CPU[axis];
 	}
 
 /* Sets "counts per degree" for rotation stages, or "counts per um" for linear stages */
@@ -192,7 +384,7 @@ char	buf[PI_USB_BUF];
 char	block_one_second_character;
 int	i;
 
-	pi_usb_send_and_receive(axis, "TS\r", buf, PI_USB_BUF);
+	pi_usb_send_and_receive(axis, "TS", buf, PI_USB_BUF);
 	block_one_second_character = buf[3];
 	i = (int) (block_one_second_character & (char) 4);
 	if(i == 4) return 1;
