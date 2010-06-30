@@ -29,8 +29,13 @@ clean:
 
 install:
 	cp -f pi_usb_send pi_usb_query pi_usb_register install_pi_usb remove_pi_usb /usr/local/bin
-	[ -d /etc/stages ] || mkdir /etc/serial
+	[ -d /etc/serial ] || mkdir /etc/serial
 	chmod -R g+w /etc/serial
 	chgrp -R scan /etc/serial
 	[ -f /etc/udev/rules.d/98-pi-usb.rules ] || cp 98-pi-usb.rules /etc/udev/rules.d/98-pi-usb.rules
+	[ -d /etc/pi_stages ] || mkdir /etc/pi_stages
+	cp -av ../../usb_stage_database /etc/pi_stages/
+	cp ../../usb_installed_stages /etc/pi_stages/
+	chmod -R g+w /etc/pi_stages
+	chgrp -R scan /etc/pi_stages
 
