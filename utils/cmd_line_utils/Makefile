@@ -33,9 +33,9 @@ install:
 	chmod -R g+w /etc/serial
 	chgrp -R scan /etc/serial
 	[ -f /etc/udev/rules.d/98-pi-usb.rules ] || cp 98-pi-usb.rules /etc/udev/rules.d/98-pi-usb.rules
-	[ -d /etc/pi_stages ] || mkdir /etc/pi_stages
-	cp -av ../../usb_stage_database /etc/pi_stages/
-	cp ../../usb_installed_stages /etc/pi_stages/
-	chmod -R g+w /etc/pi_stages
-	chgrp -R scan /etc/pi_stages
+	[ -d /etc/pi_stage ] || mkdir /etc/pi_stage
+	cp -av ../../usb_stage_database /etc/pi_stage/
+	[ -f /etc/pi_stage/usb_installed_stages ] || cp ../../usb_installed_stages /etc/pi_stage/
+	chmod -R g+w /etc/pi_stage
+	chgrp -R scan /etc/pi_stage
 
