@@ -443,7 +443,7 @@ void	pi_usb_move_absolute_real(int axis, float pos_real, int wait) {
 	}
 
 int	pi_usb_get_vel(int axis) {
-	return pi_usb_obtain_integer_after_colon(axis, "TY"); // TP = "Tell programmed velocity"
+	return pi_usb_obtain_integer_after_colon(axis, "TY"); // TY = "Tell programmed velocitY"
 	}
 
 float	pi_usb_get_vel_real(int axis) {
@@ -458,5 +458,28 @@ void	pi_usb_set_vel_real(int axis, float vel_real) {
 	pi_usb_set_vel(axis, pi_usb_real_to_count(axis, vel_real));
 	}
 
+void	pi_usb_set_trigger_mode(int axis, int trigger_mode) {
+	pi_usb_send_cmd(axis, "ZM", trigger_mode); // ZM = "set trigger[Z] Mode"
+	}
 
+void	pi_usb_set_trigger_pos(int axis, int pos) {
+	pi_usb_send_cmd(axis, "ZP", pos); // ZP = "set trigger[Z] Position"
+	}
+
+void	pi_usb_set_trigger_pos_real(int axis, float pos_real) {
+	pi_usb_set_trigger_pos(axis, pi_usb_real_to_count(axis, pos_real));
+	}
+
+void	pi_usb_set_trigger_increment(int axis, int increment) {
+	pi_usb_send_cmd(axis, "ZI", increment); // ZP = "set trigger[Z] Increment"
+	}
+
+void	pi_usb_set_trigger_increment_real(int axis, float increment_real) {
+	pi_usb_set_trigger_increment(axis, pi_usb_real_to_count(axis, increment_real));
+	}
+
+void	pi_usb_set_channel(int axis, int channel, int zero_or_one) {
+	if(zero_or_one == 0)	pi_usb_send_cmd(axis, "CF", channel); // CF = "Channel oFF"
+	else			pi_usb_send_cmd(axis, "CN", channel); // CN = "Channel oN"
+	}
 

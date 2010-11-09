@@ -124,6 +124,12 @@ int	pi_usb_get_vel(int axis);
 float	pi_usb_get_vel_real(int axis);
 void	pi_usb_set_vel(int axis, int vel);
 void	pi_usb_set_vel_real(int axis, float vel_real);
+void	pi_usb_set_trigger_mode(int axis, int trigger_mode);
+void	pi_usb_set_trigger_pos(int axis, int pos);
+void	pi_usb_set_trigger_pos_real(int axis, float pos_real);
+void	pi_usb_set_trigger_increment(int axis, int increment);
+void	pi_usb_set_trigger_increment_real(int axis, float increment_real);
+void	pi_usb_set_channel(int axis, int channel, int zero_or_one);
 
 struct pi_usb_params{
 	int	p;		// p-term
