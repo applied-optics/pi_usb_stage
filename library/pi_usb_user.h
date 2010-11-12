@@ -71,6 +71,9 @@
 #define PI_USB_OPTIONS_LIMIT	100	// max no. of things in a db file for catching format errors
 #define PI_USB_OPTION_LENGTH	100	// size of string to receive options into
 
+#define	PI_USB_MAX_ROT_DISCREPANCY	1	// degree
+#define	PI_USB_MAX_LIN_DISCREPANCY	20.0	// microns
+
 #ifndef	TOLOWER
 #define	TOLOWER(A)		{int TP;for(TP=0;TP<(int)strlen(A);TP++){A[TP]=tolower(A[TP]);}}
 #endif
@@ -94,6 +97,10 @@ int	pi_usb_receive(int axis, char *buf, int len);
 int	pi_usb_send_and_receive(int axis, const char *cmd, char *buf, int buf_len);
 int	pi_usb_obtain_integer_after_colon(int axis, const char *cmd);
 int	pi_usb_send_cmd(int axis, const char *cmd, int number);
+BOOL	pi_usb_recall_all_axes_pos_real(BOOL *found_axis, float *pos, BOOL silent);
+float	pi_usb_recall_pos_real(int axis, BOOL interactive, BOOL silent);
+float	pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy, BOOL silent);
+BOOL	pi_usb_save_pos_real(int axis, BOOL silent);
 BOOL	pi_usb_recall_installed_stage(int axis, char *stage_type);
 BOOL	pi_usb_recall_installed_stage(int axis, char *stage_type, BOOL silent);
 int	pi_usb_auto_stage(int axis, const char *name);

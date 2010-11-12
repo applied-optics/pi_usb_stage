@@ -21,6 +21,7 @@ int	restore_position;
 				return ret;
 				}
 			pi_usb_init(axis,FALSE);
+			pi_usb_recall_pos_real(axis, TRUE, FALSE); // interactive = TRUE, silent = FALSE
 			// round the position on purpose, so we don't get cumulative errors.
 			initial_pos[axis] = roundf(pi_usb_get_pos_real(axis));
 			n++;
@@ -33,6 +34,7 @@ int	restore_position;
 
 	for(axis=0; axis<n; axis++) {
 		if(restore_position == 1) pi_usb_move_absolute_real(axis, initial_pos[axis], PI_USB_WAIT);
+		pi_usb_save_pos_real(axis, FALSE); // silent = FALSE
 		printf("Closing axis %d\n", axis);
 		pi_usb_close(axis);
 		}
@@ -84,6 +86,14 @@ int	limit_status;
 			cout<<"Axis "<<axis<<" is a linear stage, default move size set to "<<move_size[axis]<<" um"<<"\r\n"<<flush;
 			}
 		}
+
+	for(axis=0; axis<n; axis++) {
+		if((is_rot[axis] == 1) && (msi[axis] < 3))	last_pos[axis] = pi_usb_get_pos_real(axis);
+		else						last_pos[axis] = roundf(pi_usb_get_pos_real(axis));
+		cout<<"a"<<axis<<": "<<last_pos[axis]<<" ";
+		}
+	cout<<"\r\n"<<flush;
+
 	do
 	{
 		kp=getch();
@@ -218,14 +228,14 @@ int	limit_status;
 				cout<<"Increase move size (\"faster\"): 'l' for linear stages, 'r' for rotation: "<<flush;
 				echo();
 				kp=getch();
-				cout<<"\r\t"<<endl;
+				cout<<"\r"<<endl;
 				switch(kp){
 					case 'r':
 						for(axis=0; axis<n; axis++) {
 							if(is_rot[axis] == 1) {
 								if(msi[axis] < 6) msi[axis]++;
 								move_size[axis] = rot_move_size[msi[axis]];
-								cout<<move_size[axis]<<" degrees/keypress on axis "<<axis<<"\r\n"<<flush;
+								cout<<"\t"<<move_size[axis]<<" degrees/keypress on axis "<<axis<<"\r\n"<<flush;
 								}
 							}
 						break;
@@ -234,7 +244,7 @@ int	limit_status;
 							if(is_rot[axis] == 0) {
 								if(msi[axis] < 4) msi[axis]++;
 								move_size[axis] = lin_move_size[msi[axis]];
-								cout<<move_size[axis]<<" microns/keypress on axis "<<axis<<"\r\n"<<flush;
+								cout<<"\t"<<move_size[axis]<<" microns/keypress on axis "<<axis<<"\r\n"<<flush;
 								}
 							}
 						break;
@@ -248,14 +258,14 @@ int	limit_status;
 				cout<<"Decrease move size (\"slower\"): 'l' for linear stages, 'r' for rotation: "<<flush;
 				echo();
 				kp=getch();
-				cout<<"\r\t"<<endl;
+				cout<<"\r"<<endl;
 				switch(kp){
 					case 'r':
 						for(axis=0; axis<n; axis++) {
 							if(is_rot[axis] == 1) {
 								if(msi[axis] > 0) msi[axis]--;
 								move_size[axis] = rot_move_size[msi[axis]];
-								cout<<move_size[axis]<<" degrees/keypress on axis "<<axis<<"\r\n"<<flush;
+								cout<<"\t"<<move_size[axis]<<" degrees/keypress on axis "<<axis<<"\r\n"<<flush;
 								}
 							}
 						break;
@@ -264,7 +274,7 @@ int	limit_status;
 							if(is_rot[axis] == 0) {
 								if(msi[axis] > 0) msi[axis]--;
 								move_size[axis] = lin_move_size[msi[axis]];
-								cout<<move_size[axis]<<" microns/keypress on axis "<<axis<<"\r\n"<<flush;
+								cout<<"\t"<<move_size[axis]<<" microns/keypress on axis "<<axis<<"\r\n"<<flush;
 								}
 							}
 						break;

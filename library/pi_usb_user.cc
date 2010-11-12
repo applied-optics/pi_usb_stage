@@ -171,6 +171,141 @@ char	cmd_str[PI_USB_BUF];
 /****************************************************************************
  * HOUSEKEEPING - STAGE TYPE ETC
  ****************************************************************************/
+BOOL	pi_usb_recall_all_axes_pos_real(BOOL *found_axis, float *pos, BOOL silent) {
+char	temp[30];
+int	axis;
+int	counter=0;
+FILE	*fi;
+int	i;
+
+	for(i=0; i<PI_USB_MAX_CONTROLLERS; i++) {
+		found_axis[i] = FALSE;
+		}
+	//check on the existing file---does it exist?
+	if(access(PI_USB_POSITION_FILE, F_OK)!=0){
+		printf("Recalling USB stage position: %s doesn't exist\n",PI_USB_POSITION_FILE);
+		return FALSE;
+		}
+	//can we read the file?
+	if(access(PI_USB_POSITION_FILE, R_OK)!=0){
+		printf("Recalling USB stage position: %s can't be read (bad)\n",PI_USB_POSITION_FILE);
+		return FALSE;
+		}
+
+	fi=fopen(PI_USB_POSITION_FILE,"r");
+
+	//can we open the file?
+	if(fi<0){
+		printf("Recalling USB stage position: %s can't be opened (bad)\n",PI_USB_POSITION_FILE);
+		fclose(fi);
+		return FALSE;
+		}
+
+	do{
+		counter++;
+		fscanf(fi,"%s",temp);
+		TOLOWER(temp);
+		if(strstr(temp,"axis")!=NULL) {
+			fscanf(fi,"%d",&axis);
+			if((axis < 0) || (axis >= PI_USB_MAX_CONTROLLERS)) {
+				if(silent == FALSE) printf("Illegal axis (%d)\n", axis);
+				}
+			else {
+				fscanf(fi,"%f",&pos[axis]);
+				found_axis[axis] = TRUE;
+				if(silent == FALSE) printf("Axis %d: %.2f\n", axis, pos[axis]);
+				}
+			}
+		}while((counter<PI_USB_OPTIONS_LIMIT) && (strstr(temp,"end")==NULL));
+	fclose(fi);
+
+	return TRUE;
+	}
+
+float   pi_usb_recall_pos_real(int axis, BOOL interactive, BOOL silent) {
+	if(pi_usb_is_rotation_stage(axis) == 1)	return pi_usb_recall_pos_real(axis, interactive, PI_USB_MAX_ROT_DISCREPANCY, silent);
+	else					return pi_usb_recall_pos_real(axis, interactive, PI_USB_MAX_LIN_DISCREPANCY, silent);
+	}
+
+float	pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy, BOOL silent) {
+BOOL	found_axis[PI_USB_MAX_CONTROLLERS];
+float	pos[PI_USB_MAX_CONTROLLERS];
+float	current_pos, saved_pos, ret_pos;
+char	response[10];
+
+	current_pos = pi_usb_get_pos_real(axis);
+	pi_usb_recall_all_axes_pos_real(found_axis, pos, TRUE); // even if we're not silent, we don't want to hear about all the other axes
+	if(found_axis[axis] == FALSE) {
+		ret_pos = current_pos;
+		if(silent == FALSE) printf("Position for axis %d could not be found from file, using current position: %.1f\n", axis, ret_pos);
+		}
+	else {
+		saved_pos = pos[axis];
+		if(silent == FALSE) {
+			printf("Recalling USB stage positions: axis %d is at %.1f\n", axis, saved_pos);
+			printf("According to the controller  : axis %d is at %.1f\n", axis, current_pos);
+			}
+		if(fabs(current_pos - saved_pos) <= max_discrepancy) {
+			if(silent == FALSE) printf("Difference is <= %.1f, using controller's position\n", max_discrepancy);
+			ret_pos = current_pos; // use the current position (from the controller)
+			}
+		else {
+			if(interactive == FALSE) {
+				if(silent == FALSE) printf("Difference is > %.1f, but interactive mode is off, trusting position from file\n", max_discrepancy);
+				ret_pos = saved_pos;
+				}
+			else {
+				// If interactive mode AND diff>discrepancy, then ask what to do (no matter what silent status is)
+				printf("\nDecision time. Difference between controller and file > %.1f\n", max_discrepancy);
+				printf("Which do you trust more, ");
+				do{
+					printf("the (f)ile or the (c)ontroller? ");
+					fgets(response,9,stdin);
+					} while((response[0]!='f')&&(response[0]!='c'));
+				if(response[0]=='f'){
+					printf("Ok then, restoring position from the file\n");
+					ret_pos = saved_pos;
+					}
+				else {
+					printf("Ok then, using the position according to the controller\n");
+					ret_pos = current_pos;
+					}
+				}
+			}
+		}
+	pi_usb_set_pos_real(axis, ret_pos);
+	return ret_pos;
+	}
+
+BOOL	pi_usb_save_pos_real(int axis, BOOL silent) {
+BOOL	found_axis[PI_USB_MAX_CONTROLLERS];
+float	pos[PI_USB_MAX_CONTROLLERS];
+int	i;
+FILE	*out;
+
+	// first read in all the stored positions, so we don't lose any information about the other axes
+	pi_usb_recall_all_axes_pos_real(found_axis, pos, TRUE); // even if we're not silent, we don't want to hear about all the other axes
+	pi_usb_wait_motion_complete(axis);
+	pos[axis] = pi_usb_get_pos_real(axis);
+	found_axis[axis] = TRUE; // just in case it wasn't in the file already
+
+	out = fopen(PI_USB_POSITION_FILE, "w");
+		if(out < 0) {
+		printf("Saving USB stage position: %s can't be opened for writing (bad)\n", PI_USB_POSITION_FILE);
+		return FALSE;
+		}
+
+	for(i=0; i<PI_USB_MAX_CONTROLLERS; i++) {
+		if(found_axis[i] == TRUE) {
+			fprintf(out,"axis %d %f\n", i, pos[i]);
+			}
+		}
+	fclose(out);
+
+	if(silent == FALSE) printf("Saving axis %d position (%.2f) to %s\n", axis, pos[axis], PI_USB_POSITION_FILE);
+	return TRUE;
+	}
+
 BOOL	pi_usb_recall_installed_stage(int axis, char *stage_type) {
 	return pi_usb_recall_installed_stage(axis, stage_type, FALSE);
 	}
@@ -189,7 +324,7 @@ FILE	*fi;
 		}
 	//can we read the file?
 	if(access(PI_USB_INSTALLED_STAGES_FILE, R_OK)!=0){
-		printf("Recalling PCI installed stages: %s can't be read (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
+		printf("Recalling USB installed stages: %s can't be read (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
 		return FALSE;
 		}
 
@@ -197,7 +332,7 @@ FILE	*fi;
 
 	//can we open the file?
 	if(fi<0){
-		printf("Recalling PCI installed stages: %s can't be opened (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
+		printf("Recalling USB installed stages: %s can't be opened (bad)\n",PI_USB_INSTALLED_STAGES_FILE);
 		fclose(fi);
 		return FALSE;
 		}
