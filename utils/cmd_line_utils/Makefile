@@ -28,7 +28,7 @@ clean:
 	rm -f *.o test.* pi_usb_test
 
 install:
-	cp -f pi_usb_send pi_usb_query pi_usb_register install_pi_usb remove_pi_usb /usr/local/bin
+	cp -f pi_usb_send pi_usb_query pi_usb_register install_pi_usb actually_install_pi_usb remove_pi_usb /usr/local/bin
 	[ -d /etc/serial ] || mkdir /etc/serial
 	chmod -R g+w /etc/serial
 	chgrp -R scan /etc/serial

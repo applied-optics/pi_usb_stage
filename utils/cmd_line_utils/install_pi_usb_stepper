@@ -1,0 +1,48 @@
+#!/bin/sh
+
+#This script should be run by udev by sticking the appropriate line in /etc/udev/rules.d/udev_local.rules
+#The line will look something like:
+#
+#ACTION=="add", BUS=="usb", SYSFS{idVendor}=="1a72", SYSFS{idProduct}=="1007", MODE="666", RUN+="/usr/local/bin/install_pi_usb"
+#
+#The purpose of this script is to
+#(1) Load the correct (ftdi_sio) kernel module when the PI Mercury stage controller is plugged in (using usb)
+#(2) Find out which ttyUSB<x> device it has ended up at (usually ttyUSB0, but can be a bigger no if previously crashed)
+#(3) Run pi_usb_register on this device, which outputs a number corresponding to what "address" the box
+#    has, according to the dip switches on the front of the device
+#(4) Creates a link /dev/pi_usb<X> --> /dev/ttyUSB<Y> where X is the device address (dip switches) and Y is
+#    where the ftdi_sio module sticks the device in the system (usually 0). If a link already existed, it is deleted first.
+#
+#The curly brackets are to detach the script, according to http://reactivated.net/writing_udev_rules.html#external-run
+#your program should run "quickly".
+#
+#Despite doing this, the script seems to run multiple times, often $dev_address ends up empty (or at least non-printable)
+#which, if it wasn't for the conditional "if" testing if its >=0 and <=15, would otherwise result in a link
+#/dev/pi_usb -> /dev/ttyUSB0 (rather than /dev/pi_usb0 -> /dev/ttyUSB0). Never did work out why.
+#
+#In short, this script creates an appropriate device whose name is ALWAYS predictable, based on the state of
+#the dip switches on the front of the device. No chance of messing up which stage is which following a reboot!
+
+{
+#(1)
+#/sbin/modprobe -q ftdi_sio vendor=0x1a72 product=0x1007
+/sbin/modprobe -q ftdi_sio vendor=0x1a72 product=0x1001
+
+#(2)
+device=`ls -t /sys/bus/usb-serial/devices/ |head -n 1`
+
+#(3)
+dev_address=`/usr/local/bin/pi_usb_register /dev/$device`
+link_to_dev=/dev/pi_usb$dev_address
+if [ $dev_address -ge 0 -a $dev_address -le 15 ]; then
+	#We're good apparently
+	#(4)
+	if [ -L $link_to_dev ]; then
+		rm $link_to_dev;
+	fi
+	ln -s /dev/$device $link_to_dev
+else
+	echo "That didn't work, link_to_dev is $link_to_dev" > /dev/null
+fi
+
+} &

@@ -1,0 +1,13 @@
+
+stage m-413.3pd
+	p-term 		220
+	i-term 		40
+	d-term 		250
+	i-limit		2000
+	acceleration	400000
+	velocity	40000
+	limit_mode	2
+	cpu		56.88889
+	rotation_stage	0
+	end
+

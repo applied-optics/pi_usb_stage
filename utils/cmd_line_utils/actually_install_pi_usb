@@ -1,0 +1,56 @@
+#!/bin/sh
+
+#This script should be run by udev by sticking the appropriate line in /etc/udev/rules.d/udev_local.rules
+#The line will look something like:
+#
+#ACTION=="add", BUS=="usb", SYSFS{idVendor}=="1a72", SYSFS{idProduct}=="1007", MODE="666", RUN+="/usr/local/bin/install_pi_usb"
+#
+#The purpose of this script is to
+#(1) Load the correct (ftdi_sio) kernel module when the PI Mercury stage controller is plugged in (using usb)
+#(2) Find out which ttyUSB<x> device it has ended up at (usually ttyUSB0, but can be a bigger no if previously crashed)
+#(3) Run pi_usb_register on this device, which outputs a number corresponding to what "address" the box
+#    has, according to the dip switches on the front of the device
+#(4) Creates a link /dev/pi_usb<X> --> /dev/ttyUSB<Y> where X is the device address (dip switches) and Y is
+#    where the ftdi_sio module sticks the device in the system (usually 0). If a link already existed, it is deleted first.
+#
+#In short, this script creates an appropriate device whose name is ALWAYS predictable, based on the state of
+#the dip switches on the front of the device. No chance of messing up which stage is which following a reboot!
+
+if [ -f /tmp/installing_pi_usb.lock ]; then
+	#echo "lock file found" >> /tmp/found_lockfile
+	echo "lock file found: /tmp/installing_pi_usb.lock"
+	echo "remove this if necessary"
+else
+	touch /tmp/installing_pi_usb.lock
+
+	#(1)
+	# if the vendor/product IDs have not been added to the ftdi_sio kernel module, then
+	# one of the following lines will be needed:
+	#/sbin/modprobe -q ftdi_sio vendor=0x1a72 product=0x1007	# dc motor controller
+	#/sbin/modprobe -q ftdi_sio vendor=0x1a72 product=0x1001	# stepper motor controller
+
+	#(2)
+	device=`ls -t /sys/bus/usb-serial/devices/ |head -n 1`
+	#ls -t /sys/bus/usb-serial/devices/ |head -n 1 >> /tmp/usb_device.txt
+	#echo "got this far" >> /tmp/usb_device.txt
+
+	#(3)
+	dev_address=`/usr/local/bin/pi_usb_register /dev/$device`
+	#echo $dev_address >> /tmp/usb_device.txt
+	link_to_dev=/dev/pi_usb$dev_address
+	#echo $link_to_dev >> /tmp/usb_device.txt
+	#echo "got this far 2" >> /tmp/usb_device.txt
+	if [ $dev_address -ge 0 -a $dev_address -le 15 ]; then
+		#We're good apparently
+		#(4)
+		if [ -L $link_to_dev ]; then
+			#echo "found existing $link_to_dev" >> /tmp/usb_device.txt
+			rm $link_to_dev;
+		fi
+		ln -s /dev/$device $link_to_dev
+	else
+		echo "That didn't work, link_to_dev is $link_to_dev" > /dev/null
+	fi
+
+	rm /tmp/installing_pi_usb.lock
+fi
