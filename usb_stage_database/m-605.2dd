@@ -9,5 +9,6 @@ stage m-605.2dd
 	limit_mode	2
 	cpu		10
 	rotation_stage	0
+	stepper		0
 	end
 

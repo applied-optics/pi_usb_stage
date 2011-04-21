@@ -9,5 +9,6 @@ stage m-061.pd
 	limit_mode	2
 	cpu		1222.2222222
 	rotation_stage	1
+	stepper		0
 	end
 

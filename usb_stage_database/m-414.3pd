@@ -7,7 +7,8 @@ stage m-413.3pd
 	acceleration	600000
 	velocity	140000
 	limit_mode	2
-	cpu		42.9206
+	cpu		2
 	rotation_stage	0
+	stepper		0
 	end
 
