@@ -27,6 +27,7 @@
 // cpu = "counts per unit", either micrometres (linear) or degrees (rotation)
 float	PI_USB_CPU[PI_USB_MAX_CONTROLLERS];
 int	PI_USB_IS_ROT[PI_USB_MAX_CONTROLLERS]; // = 0 if linear stage, = 1 if rotation stage
+int	PI_USB_IS_STEPPER[PI_USB_MAX_CONTROLLERS]; // = 0 if DC controller, = 1 if stepper controller (different "motion complete")
 
 int	PI_USB_FD[PI_USB_MAX_CONTROLLERS]; // file descriptors, indexed by axis/address
 
@@ -369,6 +370,10 @@ int	err;
 	stage.velocity		= PI_USB_NOT_SET;
 	stage.motor_mode	= PI_USB_NOT_SET;
 	stage.limit_mode	= PI_USB_NOT_SET;
+	stage.drive_current	= PI_USB_NOT_SET;
+	stage.hold_current	= PI_USB_NOT_SET;
+	stage.hold_time		= PI_USB_NOT_SET;
+	stage.is_stepper	= PI_USB_NOT_SET;
 
 	err = pi_usb_auto_read_db(&stage, name, PI_USB_AUTO_STAGE_PATH);
 	if(err != PI_USB_OK) return err;
@@ -412,6 +417,10 @@ FILE    *fi;
 		if(strstr(temp, "limit_mode") != NULL)		fscanf(fi, "%d", &stage->limit_mode);
 		if(strstr(temp, "cpu") != NULL)			fscanf(fi, "%f", &stage->cpu);
 		if(strstr(temp, "rotation_stage") != NULL)	fscanf(fi, "%d", &stage->is_rot);
+		if(strstr(temp, "stepper") != NULL)		fscanf(fi, "%d", &stage->is_stepper);
+		if(strstr(temp, "drive_current") != NULL)	fscanf(fi, "%d", &stage->drive_current);
+		if(strstr(temp, "hold_current") != NULL)	fscanf(fi, "%d", &stage->hold_current);
+		if(strstr(temp, "hold_time") != NULL)		fscanf(fi, "%d", &stage->hold_time);
 		}while((counter < PI_USB_OPTIONS_LIMIT) && (strstr(temp, "end") == NULL));
 
 	fclose(fi);
@@ -430,6 +439,10 @@ void	pi_usb_auto_set_stage(int axis, struct pi_usb_params *stage){
 	if(stage->velocity!=PI_USB_NOT_SET)	pi_usb_set_vel(axis, stage->velocity);
 	if(stage->cpu!=PI_USB_NOT_SET)		pi_usb_set_cpu(axis, stage->cpu);
 	if(stage->is_rot!=PI_USB_NOT_SET)	pi_usb_set_rotation_stage_flag(axis, stage->is_rot);
+	if(stage->is_stepper!=PI_USB_NOT_SET)	pi_usb_set_stepper_flag(axis, stage->is_stepper);
+	if(stage->drive_current!=PI_USB_NOT_SET)pi_usb_send_cmd(axis, "DC", stage->drive_current);
+	if(stage->hold_current!=PI_USB_NOT_SET)	pi_usb_send_cmd(axis, "HC", stage->hold_current);
+	if(stage->hold_time!=PI_USB_NOT_SET)	pi_usb_send_cmd(axis, "HT", stage->hold_time);
 
 //	if(stage->vff!=PI_USB_NOT_SET) // I don't know what vff is, for a USB controller...
 //		pi_setQMC(PI_USB_SET_KVFF,		  axis, stage->vff);
@@ -487,6 +500,15 @@ int	pi_usb_is_rotation_stage(int axis) {
 	return PI_USB_IS_ROT[axis];
 	}
 
+void	pi_usb_set_stepper_flag(int axis, int is_stepper) {
+	PI_USB_IS_STEPPER[axis] = is_stepper;
+	printf("Axis %d is a stepper motor\n", axis);
+	}
+
+int	pi_usb_is_stepper(int axis) {
+	return PI_USB_IS_STEPPER[axis];
+	}
+
 float	pi_usb_get_cpu(int axis) {
 	return PI_USB_CPU[axis];
 	}
@@ -513,17 +535,27 @@ void	pi_usb_motor_off(int axis) {
 	}
 
 /* Probes bit 2 of the second character of the first block of the "Tell Status"
- * (TS) response. Returns 1 if the motion is complete, 0 otherwise */
+ * (TS) response, if it's a C-863 DC motor controller, or bit 1 of the same if
+ * it's a C-663 stepper motor controller. Returns 1 if the motion is complete,
+ * 0 otherwise */
 int	pi_usb_motion_complete(int axis) {
 char	buf[PI_USB_BUF];
 char	block_one_second_character;
-int	i;
+int	i, ret = 0;
 
 	pi_usb_send_and_receive(axis, "TS", buf, PI_USB_BUF);
-	block_one_second_character = buf[3];
-	i = (int) (block_one_second_character & (char) 4);
-	if(i == 4) return 1;
-	else return 0;
+	if(PI_USB_IS_STEPPER[axis] == 1) {
+		block_one_second_character = buf[4];
+		i = (int) (block_one_second_character & (char) 2);
+		//printf("\r\nbuf = %s, block_one_second_character = %c, i = %d\r\n",buf,block_one_second_character,i);
+		if(i == 2) ret = 1;
+		}
+	else {
+		block_one_second_character = buf[3];
+		i = (int) (block_one_second_character & (char) 4);
+		if(i == 4) ret = 1;
+		}
+	return ret;
 	}
 
 /* Sits in a loop waiting for the motion to be complete */

@@ -109,6 +109,8 @@ void	pi_usb_auto_set_stage(int axis, struct pi_usb_params *stage);
 int	pi_usb_get_limit_status(int axis);
 void	pi_usb_set_rotation_stage_flag(int axis, int is_rot);
 int	pi_usb_is_rotation_stage(int axis);
+void	pi_usb_set_stepper_flag(int axis, int is_stepper);
+int	pi_usb_is_stepper(int axis);
 float	pi_usb_get_cpu(int axis);
 void	pi_usb_set_cpu(int axis, float cpu);
 int	pi_usb_real_to_count(int axis, float pos_real);
@@ -144,12 +146,16 @@ struct pi_usb_params{
 	int	d;		// d-term
 	int	vff;		// vff-term
 	int	ilimit;		// integration limit
-	int	acceleration;	// acceleration
-	int	velocity;	// velocity (counts per cycle)
+	int	acceleration;	// acceleration (native units)
+	int	velocity;	// velocity (native units, ie counts/sec, rather than real world units)
 	int	motor_mode;	// analogue (0) or PWM (1)
 	int	limit_mode;	// 0 = active low (non-PI), 1 = active high (usual PI), or 2=auto
 	float	cpu;		// encoder counts per "real world unit" (um or deg)
 	int	is_rot;		// 0 if linear stage, 1 if rotation stage
+	int	is_stepper;	// 0 if DC controller, 1 if stepper controller
+	int	drive_current;	// drive current (stepper motor) in mA (native unit)
+	int	hold_current;	// hold current (stepper motor) in mA (native unit)
+	int	hold_time;	// hold time (stepper motor) in ms (native unit)
 	};
 
 #endif
