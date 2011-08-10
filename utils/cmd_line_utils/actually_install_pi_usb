@@ -52,5 +52,9 @@ else
 		echo "That didn't work, link_to_dev is $link_to_dev" > /dev/null
 	fi
 
+	# enable the motor (changes the status light from red to green)
+	pi_usb_send MN $link_to_dev
+
+
 	rm /tmp/installing_pi_usb.lock
 fi
