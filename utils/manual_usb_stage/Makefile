@@ -5,7 +5,7 @@ LDFLAGS:=$(LDFLAGS) -L../../library
 all:	manual_usb_stage
 .PHONY:	all clean install
 
-manual_usb_stage: manual_usb_stage.o ../../library/libpi_usb.so.0
+manual_usb_stage: manual_usb_stage.o ../../library/$(full_libname)
 	$(CXX) $(LDFLAGS) -o $@ $^ -lncurses
 
 manual_usb_stage.o: manual_usb_stage.cc
