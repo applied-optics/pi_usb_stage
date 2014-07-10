@@ -42,6 +42,6 @@
 #define	DEFAULT_MOVE_SIZE_LIN	100.0
 #define	DEFAULT_MOVE_SIZE_ROT	10.0
 
-int	move_interactive(float *, int n);
+int move_interactive(float *, int n);
 
 #endif
