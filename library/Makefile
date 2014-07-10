@@ -5,7 +5,7 @@ include ../config.mk
 all : libpi_usb.so.0
 
 libpi_usb.so.0 : pi_usb_user.o
-	$(CC) -shared -Wl,-soname,libpi_usb.so.0 $^ -o $@
+	$(CC) -shared -Wl,-soname,libpi_usb.so.0 $^ -o $@ -lserial_i13n
 
 pi_usb_user.o: pi_usb_user.cc pi_usb_user.h
 	$(CC) -fPIC $(CFLAGS) -c $< -o $@
