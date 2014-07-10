@@ -22,8 +22,8 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#ifndef __PI_USB_USER__
-#define __PI_USB_USER__
+#ifndef _PI_USB_USER_H_
+#define _PI_USB_USER_H_
 
 #define	PI_USB_OK		0
 
