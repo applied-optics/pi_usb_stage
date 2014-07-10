@@ -63,10 +63,11 @@ int pi_usb_open(const char *tty)
 {
 	int sl, axis = 0;
 	sl = strlen(tty);
-	if (isdigit(tty[sl - 2]))
+	if (isdigit(tty[sl - 2])) {
 		axis = (int)strtol(tty + sl - 2, (char **)NULL, 10);
-	else if (isdigit(tty[sl - 1]))
+	} else if (isdigit(tty[sl - 1])) {
 		axis = (int)strtol(tty + sl - 1, (char **)NULL, 10);
+	}
 	return pi_usb_open(tty, axis);
 }
 
@@ -85,16 +86,17 @@ int pi_usb_open(const char *tty, int axis)
 	char address_selection_code[2];
 	char chan_str[2];
 
-	if ((axis > (PI_USB_MAX_CONTROLLERS - 1)) || (axis < 0))
+	if ((axis > (PI_USB_MAX_CONTROLLERS - 1)) || (axis < 0)) {
 		axis = 0;	// don't put up with any nonsense
+	}
 	PI_USB_FD[axis] = serial_open(tty, 9600);	// default baud rate
 	// serial_open should return a file descriptor. If negative, something
 	// is wrong, so return the error value
-	if (PI_USB_FD[axis] < 0)
+	if (PI_USB_FD[axis] < 0) {
 		return PI_USB_FD[axis];
 	// otherwise, return the axis, rather than the file descriptor.
 	// Before that, send it the address selection code again.
-	else {
+	} else {
 		sprintf(chan_str, "%hhX", axis);	// Converts axis (0..15) into hex (0..F)
 		address_selection_code[0] = (char)1;
 		address_selection_code[1] = chan_str[0];	// Just extract the char, make it the second byte
@@ -260,14 +262,15 @@ BOOL pi_usb_recall_all_axes_pos_real(BOOL * found_axis, float *pos, BOOL silent)
 
 float pi_usb_recall_pos_real(int axis, BOOL interactive, BOOL silent)
 {
-	if (pi_usb_is_rotation_stage(axis) == 1)
+	if (pi_usb_is_rotation_stage(axis) == 1) {
 		return pi_usb_recall_pos_real(axis, interactive,
 					      PI_USB_MAX_ROT_DISCREPANCY,
 					      silent);
-	else
+	} else {
 		return pi_usb_recall_pos_real(axis, interactive,
 					      PI_USB_MAX_LIN_DISCREPANCY,
 					      silent);
+	}
 }
 
 float pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy,
@@ -282,10 +285,11 @@ float pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy,
 	pi_usb_recall_all_axes_pos_real(found_axis, pos, TRUE);	// even if we're not silent, we don't want to hear about all the other axes
 	if (found_axis[axis] == FALSE) {
 		ret_pos = current_pos;
-		if (silent == FALSE)
+		if (silent == FALSE) {
 			printf
 			    ("Position for axis %d could not be found from file, using current position: %.1f\n",
 			     axis, ret_pos);
+		}
 	} else {
 		saved_pos = pos[axis];
 		if (silent == FALSE) {
@@ -297,17 +301,19 @@ float pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy,
 			     axis, current_pos);
 		}
 		if (fabs(current_pos - saved_pos) <= max_discrepancy) {
-			if (silent == FALSE)
+			if (silent == FALSE) {
 				printf
 				    ("Difference is <= %.1f, using controller's position\n",
 				     max_discrepancy);
+			}
 			ret_pos = current_pos;	// use the current position (from the controller)
 		} else {
 			if (interactive == FALSE) {
-				if (silent == FALSE)
+				if (silent == FALSE) {
 					printf
 					    ("Difference is > %.1f, but interactive mode is off, trusting position from file\n",
 					     max_discrepancy);
+				}
 				ret_pos = saved_pos;
 			} else {
 				// If interactive mode AND diff>discrepancy, then ask what to do (no matter what silent status is)
@@ -365,9 +371,10 @@ BOOL pi_usb_save_pos_real(int axis, BOOL silent)
 	}
 	fclose(out);
 
-	if (silent == FALSE)
+	if (silent == FALSE) {
 		printf("Saving axis %d position (%.2f) to %s\n", axis,
 		       pos[axis], PI_USB_POSITION_FILE);
+	}
 	return TRUE;
 }
 
@@ -451,8 +458,9 @@ int pi_usb_auto_stage(int axis, const char *name)
 	stage.is_stepper = PI_USB_NOT_SET;
 
 	err = pi_usb_auto_read_db(&stage, name, PI_USB_AUTO_STAGE_PATH);
-	if (err != PI_USB_OK)
+	if (err != PI_USB_OK) {
 		return err;
+	}
 
 	pi_usb_auto_set_stage(axis, &stage);
 	return PI_USB_OK;
@@ -472,57 +480,76 @@ int pi_usb_auto_read_db(struct pi_usb_params *stage, const char *name,
 	TOLOWER(filename);
 
 	// look for the file
-	if (access(filename, F_OK) != 0)
+	if (access(filename, F_OK) != 0) {
 		return PI_USB_NO_STAGE_FILE;
-	if (access(filename, R_OK) != 0)
+	}
+	if (access(filename, R_OK) != 0) {
 		return PI_USB_CANT_READ_STAGE_FILE;
+	}
 
 	// open file
 	fi = fopen(filename, "r");
-	if (fi < 0)
+	if (fi < 0) {
 		return PI_USB_CANT_OPEN_STAGE_FILE;
+	}
 
 	// now go through file and look for strings
 	do {
 		counter++;
 		fscanf(fi, "%s", temp);
 		TOLOWER(temp);
-		if (strstr(temp, "p-term") != NULL)
+		if (strstr(temp, "p-term") != NULL) {
 			fscanf(fi, "%d", &stage->p);
-		if (strstr(temp, "i-term") != NULL)
+		}
+		if (strstr(temp, "i-term") != NULL) {
 			fscanf(fi, "%d", &stage->i);
-		if (strstr(temp, "d-term") != NULL)
+		}
+		if (strstr(temp, "d-term") != NULL) {
 			fscanf(fi, "%d", &stage->d);
-		if (strstr(temp, "i-limit") != NULL)
+		}
+		if (strstr(temp, "i-limit") != NULL) {
 			fscanf(fi, "%d", &stage->ilimit);
-		if (strstr(temp, "vff-term") != NULL)
+		}
+		if (strstr(temp, "vff-term") != NULL) {
 			fscanf(fi, "%d", &stage->vff);
-		if (strstr(temp, "acceleration") != NULL)
+		}
+		if (strstr(temp, "acceleration") != NULL) {
 			fscanf(fi, "%d", &stage->acceleration);
-		if (strstr(temp, "velocity") != NULL)
+		}
+		if (strstr(temp, "velocity") != NULL) {
 			fscanf(fi, "%d", &stage->velocity);
-		if (strstr(temp, "motor_mode") != NULL)
+		}
+		if (strstr(temp, "motor_mode") != NULL) {
 			fscanf(fi, "%d", &stage->motor_mode);
-		if (strstr(temp, "limit_mode") != NULL)
+		}
+		if (strstr(temp, "limit_mode") != NULL) {
 			fscanf(fi, "%d", &stage->limit_mode);
-		if (strstr(temp, "cpu") != NULL)
+		}
+		if (strstr(temp, "cpu") != NULL) {
 			fscanf(fi, "%f", &stage->cpu);
-		if (strstr(temp, "rotation_stage") != NULL)
+		}
+		if (strstr(temp, "rotation_stage") != NULL) {
 			fscanf(fi, "%d", &stage->is_rot);
-		if (strstr(temp, "stepper") != NULL)
+		}
+		if (strstr(temp, "stepper") != NULL) {
 			fscanf(fi, "%d", &stage->is_stepper);
-		if (strstr(temp, "drive_current") != NULL)
+		}
+		if (strstr(temp, "drive_current") != NULL) {
 			fscanf(fi, "%d", &stage->drive_current);
-		if (strstr(temp, "hold_current") != NULL)
+		}
+		if (strstr(temp, "hold_current") != NULL) {
 			fscanf(fi, "%d", &stage->hold_current);
-		if (strstr(temp, "hold_time") != NULL)
+		}
+		if (strstr(temp, "hold_time") != NULL) {
 			fscanf(fi, "%d", &stage->hold_time);
+		}
 	} while ((counter < PI_USB_OPTIONS_LIMIT)
 		 && (strstr(temp, "end") == NULL));
 
 	fclose(fi);
-	if (counter == PI_USB_OPTIONS_LIMIT)
+	if (counter == PI_USB_OPTIONS_LIMIT) {
 		return PI_USB_AUTO_STAGE_ERROR;
+	}
 
 	return PI_USB_OK;
 }
@@ -530,30 +557,42 @@ int pi_usb_auto_read_db(struct pi_usb_params *stage, const char *name,
 void pi_usb_auto_set_stage(int axis, struct pi_usb_params *stage)
 {
 
-	if (stage->p != PI_USB_NOT_SET)
+	if (stage->p != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "DP", stage->p);
-	if (stage->i != PI_USB_NOT_SET)
+	}
+	if (stage->i != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "DI", stage->i);
-	if (stage->d != PI_USB_NOT_SET)
+	}
+	if (stage->d != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "DD", stage->d);
-	if (stage->ilimit != PI_USB_NOT_SET)
+	}
+	if (stage->ilimit != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "DL", stage->ilimit);
-	if (stage->acceleration != PI_USB_NOT_SET)
+	}
+	if (stage->acceleration != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "SA", stage->acceleration);
-	if (stage->velocity != PI_USB_NOT_SET)
+	}
+	if (stage->velocity != PI_USB_NOT_SET) {
 		pi_usb_set_vel(axis, stage->velocity);
-	if (stage->cpu != PI_USB_NOT_SET)
+	}
+	if (stage->cpu != PI_USB_NOT_SET) {
 		pi_usb_set_cpu(axis, stage->cpu);
-	if (stage->is_rot != PI_USB_NOT_SET)
+	}
+	if (stage->is_rot != PI_USB_NOT_SET) {
 		pi_usb_set_rotation_stage_flag(axis, stage->is_rot);
-	if (stage->is_stepper != PI_USB_NOT_SET)
+	}
+	if (stage->is_stepper != PI_USB_NOT_SET) {
 		pi_usb_set_stepper_flag(axis, stage->is_stepper);
-	if (stage->drive_current != PI_USB_NOT_SET)
+	}
+	if (stage->drive_current != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "DC", stage->drive_current);
-	if (stage->hold_current != PI_USB_NOT_SET)
+	}
+	if (stage->hold_current != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "HC", stage->hold_current);
-	if (stage->hold_time != PI_USB_NOT_SET)
+	}
+	if (stage->hold_time != PI_USB_NOT_SET) {
 		pi_usb_send_cmd(axis, "HT", stage->hold_time);
+	}
 
 //      if(stage->vff!=PI_USB_NOT_SET) // I don't know what vff is, for a USB controller...
 //              pi_setQMC(PI_USB_SET_KVFF,                axis, stage->vff);
@@ -590,10 +629,11 @@ int pi_usb_get_limit_status(int axis)
 		limits_so_far++;
 		ret = PI_USB_ON_NEGATIVE_LIMIT;
 	}
-	if (limits_so_far == 2)
+	if (limits_so_far == 2) {
 		return PI_USB_LIMIT_BAD;
-	else
+	} else {
 		return ret;
+	}
 }
 
 /* There needs to be a way of the user program to discover if the stage is a
@@ -670,13 +710,15 @@ int pi_usb_motion_complete(int axis)
 		block_one_second_character = buf[4];
 		i = (int)(block_one_second_character & (char)2);
 		//printf("\r\nbuf = %s, block_one_second_character = %c, i = %d\r\n",buf,block_one_second_character,i);
-		if (i == 2)
+		if (i == 2) {
 			ret = 1;
+		}
 	} else {
 		block_one_second_character = buf[3];
 		i = (int)(block_one_second_character & (char)4);
-		if (i == 4)
+		if (i == 4) {
 			ret = 1;
+		}
 	}
 	return ret;
 }
@@ -691,10 +733,11 @@ void pi_usb_wait_motion_complete(int axis, useconds_t usleep_time)
 {
 	int ret, done = 0;
 	do {
-		if (pi_usb_motion_complete(axis) == 1)
+		if (pi_usb_motion_complete(axis) == 1) {
 			done = 1;
-		else
+		} else {
 			usleep(usleep_time);
+		}
 	} while (done == 0);
 }
 
@@ -726,8 +769,9 @@ void pi_usb_set_origin(int axis)
 void pi_usb_move_relative(int axis, int pos, int wait)
 {
 	pi_usb_send_cmd(axis, "MR", pos);	// MR = "Move Relative"
-	if (wait == PI_USB_WAIT)
+	if (wait == PI_USB_WAIT) {
 		pi_usb_wait_motion_complete(axis);
+	}
 }
 
 void pi_usb_move_relative_real(int axis, float pos_real, int wait)
@@ -738,8 +782,9 @@ void pi_usb_move_relative_real(int axis, float pos_real, int wait)
 void pi_usb_move_absolute(int axis, int pos, int wait)
 {
 	pi_usb_send_cmd(axis, "MA", pos);	// MA = "Move Absolute"
-	if (wait == PI_USB_WAIT)
+	if (wait == PI_USB_WAIT) {
 		pi_usb_wait_motion_complete(axis);
+	}
 }
 
 void pi_usb_move_absolute_real(int axis, float pos_real, int wait)
@@ -796,8 +841,10 @@ void pi_usb_set_trigger_increment_real(int axis, float increment_real)
 
 void pi_usb_set_channel(int axis, int channel, int zero_or_one)
 {
-	if (zero_or_one == 0)
+	if (zero_or_one == 0) {
 		pi_usb_send_cmd(axis, "CF", channel);	// CF = "Channel oFF"
-	else
+	} else {
 		pi_usb_send_cmd(axis, "CN", channel);	// CN = "Channel oN"
+	}
 }
+
