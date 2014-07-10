@@ -25,6 +25,8 @@
 #ifndef _PI_USB_USER_H_
 #define _PI_USB_USER_H_
 
+#include <unistd.h>
+
 #define	PI_USB_OK		0
 
 #define	PI_USB_LIMIT_OK			0
