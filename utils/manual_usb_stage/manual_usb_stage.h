@@ -1,11 +1,7 @@
-#include "../../library/pi_usb_user.h"
-#include <curses.h>
-#include <unistd.h>
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fstream>
-using namespace std;
+#ifndef MANUAL_USB_STAGE_H
+#define MANUAL_USB_STAGE_H
+
+#include "pi_usb_user.h"
 
 //direction chars
 #define DITHER		'D'
@@ -47,3 +43,5 @@ using namespace std;
 #define	DEFAULT_MOVE_SIZE_ROT	10.0
 
 int	move_interactive(float *, int n);
+
+#endif

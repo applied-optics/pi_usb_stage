@@ -6,7 +6,7 @@ utils/pi_usb_test/pi_usb_send
 utils/cmd_line_utils/pi_usb_query
 utils/cmd_line_utils/pi_usb_register
 utils/cmd_line_utils/pi_usb_send
-manual_usb_stage
+utils/manual_usb_stage/manual_usb_stage
 pi_usb_test.cc
 *.so*
 *.o

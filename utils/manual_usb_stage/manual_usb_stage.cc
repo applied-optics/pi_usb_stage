@@ -1,5 +1,16 @@
+#include <curses.h>
+#include <unistd.h>
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fstream>
+#include <math.h>
+
+#include <serial_i13n.h>
+
 #include "manual_usb_stage.h"
 
+using namespace std;
 
 int	main(int argc, char *argv[]) {
 int	n = 0;
@@ -20,8 +31,8 @@ int	restore_position;
 				fprintf(stderr, "Error in pi_usb_open, quitting with exit value %d\n", ret);
 				return ret;
 				}
-			pi_usb_init(axis,FALSE);
-			pi_usb_recall_pos_real(axis, TRUE, FALSE); // interactive = TRUE, silent = FALSE
+			pi_usb_init(axis,false);
+			pi_usb_recall_pos_real(axis, true, false); // interactive = true, silent = false
 			// round the position on purpose, so we don't get cumulative errors.
 			initial_pos[axis] = roundf(pi_usb_get_pos_real(axis));
 			n++;
@@ -34,7 +45,7 @@ int	restore_position;
 
 	for(axis=0; axis<n; axis++) {
 		if(restore_position == 1) pi_usb_move_absolute_real(axis, initial_pos[axis], PI_USB_WAIT);
-		pi_usb_save_pos_real(axis, FALSE); // silent = FALSE
+		pi_usb_save_pos_real(axis, false); // silent = false
 		printf("Closing axis %d\n", axis);
 		pi_usb_close(axis);
 		}
@@ -500,7 +511,7 @@ int	limit_status;
 // Note to sds 10/6/10: need to sort out limit switches, on the usb driver generally. Not relevant for rotation stage though.
 
 //		for(axis=0;axis<4;axis++) {
-//			if(got_stage[axis]==TRUE) {
+//			if(got_stage[axis]==true) {
 //				limit_status=pi_get_limit_status(axis);
 //				if(limit_status==PI_ON_POSITIVE_LIMIT || limit_status==PI_ON_NEGATIVE_LIMIT) {
 //					cout<<"PROBLEM: Axis "<<axis<<" is on a limit switch at "<<pi_get_pos_um(axis)<<"! Moving off...\r\n"<<flush;
