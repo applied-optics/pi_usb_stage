@@ -24,6 +24,8 @@
 
 #include "pi_usb_user.h"
 
+#include <serial_i13n.h>
+
 // cpu = "counts per unit", either micrometres (linear) or degrees (rotation)
 float PI_USB_CPU[PI_USB_MAX_CONTROLLERS];
 int PI_USB_IS_ROT[PI_USB_MAX_CONTROLLERS];	// = 0 if linear stage, = 1 if rotation stage

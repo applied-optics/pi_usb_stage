@@ -25,8 +25,6 @@
 #ifndef __PI_USB_USER__
 #define __PI_USB_USER__
 
-#include "../../serial/serial_user.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
