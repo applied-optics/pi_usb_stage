@@ -25,18 +25,6 @@
 #ifndef __PI_USB_USER__
 #define __PI_USB_USER__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <time.h>
-#include <math.h>
-#include <ctype.h>
-
 #define	PI_USB_OK		0
 
 #define	PI_USB_LIMIT_OK			0

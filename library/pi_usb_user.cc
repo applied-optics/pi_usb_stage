@@ -22,9 +22,21 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#include "pi_usb_user.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <termios.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <time.h>
+#include <math.h>
+#include <ctype.h>
 
 #include <serial_i13n.h>
+
+#include "pi_usb_user.h"
 
 // cpu = "counts per unit", either micrometres (linear) or degrees (rotation)
 float PI_USB_CPU[PI_USB_MAX_CONTROLLERS];
