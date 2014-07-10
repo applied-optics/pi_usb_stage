@@ -112,7 +112,6 @@ int pi_usb_open(const char *tty, int axis)
 void pi_usb_init(int axis, bool silent=true)
 {
 	char stage_type[PI_USB_BUF];
-	bool got_installed_stage_type;
 
 	if (pi_usb_recall_installed_stage(axis, stage_type, silent) == true) {
 		pi_usb_auto_stage(axis, stage_type);
@@ -726,7 +725,7 @@ void pi_usb_wait_motion_complete(int axis)
 
 void pi_usb_wait_motion_complete(int axis, useconds_t usleep_time)
 {
-	int ret, done = 0;
+	int done = 0;
 	do {
 		if (pi_usb_motion_complete(axis) == 1) {
 			done = 1;
