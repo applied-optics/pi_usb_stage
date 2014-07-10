@@ -64,17 +64,11 @@
 #define	TOLOWER(A)		{int TP;for(TP=0;TP<(int)strlen(A);TP++){A[TP]=tolower(A[TP]);}}
 #endif
 
-#ifndef	BOOL
-#define	BOOL			int
-#define	TRUE			1
-#define	FALSE			0
-#endif
-
 int pi_usb_open(const char *tty);
 int pi_usb_open(int axis);
 int pi_usb_open(const char *tty, int axis);
 void pi_usb_init(int axis);
-void pi_usb_init(int axis, BOOL silent);
+void pi_usb_init(int axis, bool silent);
 int pi_usb_close(int axis);
 int pi_usb_send(int axis, const char *cmd);
 int pi_usb_send_raw(int axis, const char *cmd, int len);
@@ -82,14 +76,14 @@ int pi_usb_receive(int axis, char *buf, int len);
 int pi_usb_send_and_receive(int axis, const char *cmd, char *buf, int buf_len);
 int pi_usb_obtain_integer_after_colon(int axis, const char *cmd);
 int pi_usb_send_cmd(int axis, const char *cmd, int number);
-BOOL pi_usb_recall_all_axes_pos_real(BOOL * found_axis, float *pos,
-				     BOOL silent);
-float pi_usb_recall_pos_real(int axis, BOOL interactive, BOOL silent);
-float pi_usb_recall_pos_real(int axis, BOOL interactive, float max_discrepancy,
-			     BOOL silent);
-BOOL pi_usb_save_pos_real(int axis, BOOL silent);
-BOOL pi_usb_recall_installed_stage(int axis, char *stage_type);
-BOOL pi_usb_recall_installed_stage(int axis, char *stage_type, BOOL silent);
+bool pi_usb_recall_all_axes_pos_real(bool * found_axis, float *pos,
+				     bool silent);
+float pi_usb_recall_pos_real(int axis, bool interactive, bool silent);
+float pi_usb_recall_pos_real(int axis, bool interactive, float max_discrepancy,
+			     bool silent);
+bool pi_usb_save_pos_real(int axis, bool silent);
+bool pi_usb_recall_installed_stage(int axis, char *stage_type);
+bool pi_usb_recall_installed_stage(int axis, char *stage_type, bool silent);
 int pi_usb_auto_stage(int axis, const char *name);
 int pi_usb_auto_read_db(struct pi_usb_params *stage, const char *name,
 			const char *path);
