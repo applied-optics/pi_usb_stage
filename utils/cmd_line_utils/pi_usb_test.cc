@@ -1,5 +1,7 @@
-#include "../../library/pi_usb_user.h"
+#include <cstdio>
+#include <cstring>
 #include <ctype.h>
+#include "pi_usb_user.h"
 
 int	main(int argc, char *argv[]) {
 
@@ -16,7 +18,7 @@ int	axis;
 	memset(&buf, 0, 1024);
 	memset(&tmp, 0, 128);
 
-	ret=pi_usb_recall_installed_stage(0, tmp, FALSE);
+	ret=pi_usb_recall_installed_stage(0, tmp, false);
 	printf("ret = %d, tmp = %s\n", ret, tmp);
 	
 	//open serial port
@@ -25,7 +27,7 @@ int	axis;
 		return axis;
 		}
 	printf("managed pi_usb_open\n");
-	pi_usb_init(axis, FALSE);
+	pi_usb_init(axis, false);
 	printf("managed pi_usb_init\n");
 
 	pi_usb_auto_stage(axis, tmp);

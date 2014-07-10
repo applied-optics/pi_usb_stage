@@ -22,7 +22,11 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#include "../../library/pi_usb_user.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include "pi_usb_user.h"
 
 int	main(int argc, char *argv[]) {
 int	axis;
