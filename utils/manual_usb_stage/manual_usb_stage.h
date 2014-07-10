@@ -1,7 +1,7 @@
 #ifndef MANUAL_USB_STAGE_H
 #define MANUAL_USB_STAGE_H
 
-#include "pi_usb_user.h"
+#include "pi_usb_stage.h"
 
 //direction chars
 #define DITHER		'D'

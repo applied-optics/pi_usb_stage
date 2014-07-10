@@ -3,7 +3,7 @@
  *
  * A simple commandline utility that reports the "address" of
  * a PI (Physik Instrumente) USB motor controller, such as the C-863
- * Mercury device. Uses our pi_usb_user and serial_user libraries.
+ * Mercury device. Uses our pi_usb_stage and serial_i13n libraries.
  * The address is set using the dip switches on the front of the 
  * controller, and can have a value from 0 to 15. It does this by
  * sending two bytes to the controller, (char) 1 and then (in turn)
@@ -38,7 +38,7 @@
 
 #include <serial_i13n.h>
 
-#include "pi_usb_user.h"
+#include "pi_usb_stage.h"
 
 int	main(int argc, char *argv[]) {
 int	axis, ret;

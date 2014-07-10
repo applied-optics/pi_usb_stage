@@ -1,9 +1,9 @@
-/* pi_usb_user.h
+/* pi_usb_stage.h
  * Copyright (C) 2010 Steve D. Sharples
  *
  * A simple user library that allows you to do useful things to
  * a PI (Physik Instrumente) USB motor controller, such as the C-863
- * Mercury device. Uses our serial_user libraries.
+ * Mercury device. Uses our serial_i13n libraries.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

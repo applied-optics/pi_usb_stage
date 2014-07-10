@@ -7,5 +7,5 @@ MAKE=make
 prefix=/usr/local
 
 soversion=0
-libname=libpi_usb.so
+libname=libpi_usb_stage.so
 full_libname=$(libname).$(soversion)

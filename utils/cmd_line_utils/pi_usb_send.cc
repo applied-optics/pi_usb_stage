@@ -3,7 +3,7 @@
  *
  * A simple commandline utility that allows you to send commands to
  * a PI (Physik Instrumente) USB motor controller, such as the C-863
- * Mercury device. Uses our pi_usb_user and serial_user libraries.
+ * Mercury device. Uses our pi_usb_stage and serial_i13n libraries.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "pi_usb_user.h"
+#include "pi_usb_stage.h"
 
 int	main(int argc, char *argv[]) {
 int	axis;
