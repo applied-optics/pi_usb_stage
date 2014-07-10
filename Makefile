@@ -14,8 +14,13 @@ clean :
 
 install : all
 	$(INSTALL) -d $(DESTDIR)/etc/pi_stage
-	$(INSTALL) usb_stage_database $(DESTDIR)/etc/pi_stage/
-	$(INSTALL) usb_installed_stages $(DESTDIR)/etc/pi_stage/
+	$(INSTALL) -d $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/m-062.pd $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/m-413.3pd $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/m-414.3pd $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/m-605.1dd $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/m-605.2dd $(DESTDIR)/etc/pi_stage/usb_stage_database/
+	$(INSTALL) usb_stage_database/microbench_stepper $(DESTDIR)/etc/pi_stage/usb_stage_database/
 	for d in ${DIRS}; do $(MAKE) -C $${d} install; done
 
 dist : distclean
