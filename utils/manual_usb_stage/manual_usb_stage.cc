@@ -51,7 +51,7 @@ int	is_rot[PI_USB_MAX_CONTROLLERS];
 float	last_pos[PI_USB_MAX_CONTROLLERS];
 float	move_size[PI_USB_MAX_CONTROLLERS];
 float	rot_move_size[7] = {0.1, 0.5, 1.0, 5.0, 10.0, 45.0, 90.0};
-float	lin_move_size[5] = {1.0, 10.0, 100.0, 1000.0, 10000.0};
+float	lin_move_size[6] = {1.0, 10.0, 100.0, 1000.0, 5000.0, 10000.0};
 int	msi[PI_USB_MAX_CONTROLLERS]; // move size index
 int	limit_status;
 
@@ -242,7 +242,7 @@ int	limit_status;
 					case 'l':
 						for(axis=0; axis<n; axis++) {
 							if(is_rot[axis] == 0) {
-								if(msi[axis] < 4) msi[axis]++;
+								if(msi[axis] < 5) msi[axis]++;
 								move_size[axis] = lin_move_size[msi[axis]];
 								cout<<"\t"<<move_size[axis]<<" microns/keypress on axis "<<axis<<"\r\n"<<flush;
 								}

@@ -72,7 +72,7 @@
 #define PI_USB_OPTION_LENGTH	100	// size of string to receive options into
 
 #define	PI_USB_MAX_ROT_DISCREPANCY	1	// degree
-#define	PI_USB_MAX_LIN_DISCREPANCY	20.0	// microns
+#define	PI_USB_MAX_LIN_DISCREPANCY	50.0	// microns
 
 #ifndef	TOLOWER
 #define	TOLOWER(A)		{int TP;for(TP=0;TP<(int)strlen(A);TP++){A[TP]=tolower(A[TP]);}}
